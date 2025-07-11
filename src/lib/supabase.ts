@@ -8,7 +8,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    debug: true
   },
   global: {
     headers: {
@@ -29,19 +30,39 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 const testConnection = async () => {
   try {
     console.log('Testing Supabase connection...')
-    const { error } = await supabase.from('users').select('count', { count: 'exact', head: true })
+    
+    // First test basic connectivity
+    const { data, error } = await supabase
+      .from('users')
+      .select('count', { count: 'exact', head: true })
+      .limit(1)
     
     if (error) {
-      console.error('Supabase connection test failed:', error)
+      console.error('Supabase connection test failed:', error.message)
+      
+      // If users table doesn't exist, that's expected for new setup
+      if (error.code === '42P01') {
+        console.log('Users table not found - this is expected for new setup')
+        return
+      }
     } else {
       console.log('Supabase connection successful')
     }
   } catch (error) {
     console.error('Supabase connection error:', error)
+    // Don't throw error to prevent app from breaking
   }
 }
 
-testConnection()
+// Test connection with timeout
+Promise.race([
+  testConnection(),
+  new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('Connection test timeout')), 5000)
+  )
+]).catch(error => {
+  console.warn('Connection test failed or timed out:', error.message)
+})
 
 // Re-export types from the declaration file
 export type {

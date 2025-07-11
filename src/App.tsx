@@ -44,11 +44,24 @@ function AppContent() {
             <p className="text-sm text-gray-500">
               Connecting to database...
             </p>
+            <p className="text-xs text-gray-400">
+              If this takes too long, please check your internet connection
+            </p>
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Refresh Page
+            </button>
+            <button
+              onClick={() => {
+                // Force skip loading for development
+                console.log('Force skipping authentication...')
+                window.location.href = '/login'
+              }}
+              className="ml-2 px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Skip to Login
             </button>
           </div>
         </div>
@@ -65,6 +78,25 @@ function AppContent() {
               Connection Error
             </h2>
             <p className="text-red-600 mb-4">{error}</p>
+            <div className="space-y-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors mr-2"
+              >
+                Refresh Page
+              </button>
+              <button
+                onClick={() => {
+                  // Clear any stored session and try again
+                  localStorage.clear()
+                  sessionStorage.clear()
+                  window.location.reload()
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Clear Cache & Retry
+              </button>
+            </div>
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase, type User } from '../lib/supabase'
 import { Session } from '@supabase/supabase-js'
-import toast from 'react-hot-toast'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -11,19 +10,33 @@ export function useAuth() {
 
   useEffect(() => {
     let mounted = true
+    let timeoutId: NodeJS.Timeout
     
     // Initialize auth immediately without waiting for session
     const initAuth = async () => {
       try {
         console.log('Initializing authentication...')
         
+        // Set a timeout to prevent infinite loading
+        timeoutId = setTimeout(() => {
+          if (mounted && loading) {
+            console.log('Auth timeout reached, proceeding without authentication')
+            setLoading(false)
+            setError('Database connection timeout. Please check your connection.')
+          }
+        }, 10000) // 10 second timeout
+        
         // Get session without timeout to prevent premature failures
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
         if (!mounted) return
+        
+        // Clear timeout if we get a response
+        clearTimeout(timeoutId)
 
         if (sessionError) {
           console.error('Session error:', sessionError)
+          setError(`Authentication error: ${sessionError.message}`)
           setLoading(false)
           return
         }
@@ -41,7 +54,12 @@ export function useAuth() {
       } catch (error: any) {
         console.error('Auth initialization error:', error)
         if (mounted) {
+          setError(`Connection error: ${error.message || 'Unable to connect to database'}`)
           setLoading(false)
+        }
+      } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId)
         }
       }
     }
@@ -69,6 +87,9 @@ export function useAuth() {
 
     return () => {
       mounted = false
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
       subscription.unsubscribe()
     }
   }, [])
