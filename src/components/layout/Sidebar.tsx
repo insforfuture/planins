@@ -14,7 +14,8 @@ import {
   Wrench,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Building
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -26,6 +27,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Routes', href: '/routes', icon: Route },
   { name: 'Schedules', href: '/schedules', icon: Calendar },
+  { name: 'Customers', href: '/customers', icon: Building },
   { name: 'Drivers', href: '/drivers', icon: Users },
   { name: 'Vehicles', href: '/vehicles', icon: Truck },
   { name: 'Vehicle Types', href: '/vehicle-types', icon: Wrench },

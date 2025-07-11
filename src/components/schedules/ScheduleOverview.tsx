@@ -2,13 +2,17 @@ import { useState } from 'react'
 import { Calendar, Filter, Download, Plus } from 'lucide-react'
 import { DataTable } from '../ui/DataTable'
 import { StatusBadge } from '../ui/StatusBadge'
-import { useSupabaseQuery } from '../../hooks/useSupabaseQuery'
+import { useSupabaseQuery, useSupabaseMutation } from '../../hooks/useSupabaseQuery'
 import { formatDate, formatTime } from '../../lib/utils'
+import { ScheduleForm } from './ScheduleForm'
+import toast from 'react-hot-toast'
 
 export function ScheduleOverview() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [statusFilter, setStatusFilter] = useState('all')
   const [regionFilter, setRegionFilter] = useState('all')
+  const [showForm, setShowForm] = useState(false)
+  const [editingSchedule, setEditingSchedule] = useState<any>(null)
 
   const { data: schedules, isLoading } = useSupabaseQuery<any>(
     ['schedules', selectedDate, statusFilter, regionFilter],
@@ -28,11 +32,37 @@ export function ScheduleOverview() {
     { schedule_date: selectedDate }
   )
 
+  const { delete: deleteSchedule } = useSupabaseMutation<any>(
+    'schedule_instances',
+    [['schedules']]
+  )
+
   const filteredSchedules = schedules?.filter(schedule => {
     const statusMatch = statusFilter === 'all' || schedule.status === statusFilter
     const regionMatch = regionFilter === 'all' || schedule.route_schedule?.route?.region === regionFilter
     return statusMatch && regionMatch
   }) || []
+
+  const handleEdit = (schedule: any) => {
+    setEditingSchedule(schedule)
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this schedule?')) {
+      try {
+        await deleteSchedule.mutateAsync(id)
+        toast.success('Schedule deleted successfully')
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to delete schedule')
+      }
+    }
+  }
+
+  const handleCloseForm = () => {
+    setShowForm(false)
+    setEditingSchedule(null)
+  }
 
   const columns = [
     {
@@ -126,6 +156,28 @@ export function ScheduleOverview() {
       render: (value: any) => <StatusBadge status={value} />,
       sortable: true,
     },
+    {
+      key: 'actions' as keyof any,
+      header: 'Actions',
+      render: (value: any, row: any) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleEdit(row)}
+            className="p-1 text-blue-600 hover:text-blue-800"
+            title="Edit schedule"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => handleDelete(row.id)}
+            className="p-1 text-red-600 hover:text-red-800"
+            title="Delete schedule"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
   ]
 
   const uniqueRegions = Array.from(
@@ -145,7 +197,10 @@ export function ScheduleOverview() {
             <Download className="h-4 w-4" />
             Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
             <Plus className="h-4 w-4" />
             New Schedule
           </button>
@@ -201,10 +256,14 @@ export function ScheduleOverview() {
         data={filteredSchedules}
         columns={columns}
         loading={isLoading}
-        onRowClick={(schedule) => {
-          console.log('Schedule clicked:', schedule)
-        }}
       />
+
+      {showForm && (
+        <ScheduleForm
+          schedule={editingSchedule}
+          onClose={handleCloseForm}
+        />
+      )}
     </div>
   )
 }

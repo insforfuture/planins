@@ -11,6 +11,7 @@ import { Sidebar } from './components/layout/Sidebar'
 import { DashboardPage } from './pages/DashboardPage'
 import { SchedulesPage } from './pages/SchedulesPage'
 import { RoutesPage } from './pages/RoutesPage'
+import { CustomersPage } from './pages/CustomersPage'
 import { DriversPage } from './pages/DriversPage'
 import { VehiclesPage } from './pages/VehiclesPage'
 import { VehicleTypesPage } from './pages/VehicleTypesPage'
@@ -123,6 +124,7 @@ function AppContent() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/schedules" element={<SchedulesPage />} />
             <Route path="/routes" element={<RoutesPage />} />
+            <Route path="/customers" element={<CustomersPage />} />
             <Route path="/drivers" element={<DriversPage />} />
             <Route path="/vehicles" element={<VehiclesPage />} />
             <Route path="/vehicle-types" element={<VehicleTypesPage />} />
